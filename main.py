@@ -12,10 +12,8 @@ import docx
 from docx.shared import Inches
 import sys
 import requests
-from bs4 import BeautifulSoup
-import io
-import base64
-import argparse
+import pyautogui
+import glob
             
 def retrieve_excel():
     print('[INFO] IT IS NORMAL FOR RETRIEVAL TO FAIL, PLEASE BE PATIENT.')
@@ -64,20 +62,20 @@ def retrieve_excel():
                 EC.presence_of_element_located((By.XPATH, '/html/body/div[15]/div[5]/div/div/div/div/div/div[2]/div[2]/div/div[2]/div/div[1]/div[1]/button[3]'))
             )
             save_as_button.click()
-            print('[INFO] 🟢 Second element located successfully.')
+            print('[INFO] 🟢 Second element located successfully. (2/3)')
             
             # static id
             download_button = WebDriverWait(driver, 8).until(
                 EC.presence_of_element_located((By.ID, 'DownloadACopy'))
             )
             download_button.click()
-            print('[INFO] 🟢 Third element located successfully. (2/3)')
+            print('[INFO] 🟢 Third element located successfully. (3/3)')
             
             # let browser load
             time.sleep(2)
             
             if os.path.exists(file):
-                print('[INFO] 🟢 Successfully retrieved response from server. (3/3)')
+                print('[INFO] 🟢 Successfully retrieved response from server.')
             else:
                 raise Exception()
             
@@ -86,8 +84,6 @@ def retrieve_excel():
         except Exception as e:
             print('[ERROR] 🔴 Failed to retrieve response from server. Trying again...')
             # print(traceback.format_exc())
-            
-            driver.quit()
 
 def load_excel():
     print("[INFO] Preparing excel sheets...")
@@ -205,65 +201,67 @@ def write_to_excel(df):
 
     try:
         workbook.save(filename)
+        workbook.close() # close workbook so there is no writing error
         print("[INFO] 🟢 Successfully saved file.")
     except PermissionError:
         print("[ERROR] 🔴 Failed to save changes to file.")
         print("[ERROR] 🔴 Please make sure the file is closed before trying again.")
 
-def convert_excel_to_html():
+def extract_charts_from_excel():
     print('[INFO] Preparing Microsoft Word Document for exporting...')
         
-    # Set the URL to which you want to send the file
-    url = "https://api.products.aspose.app/cells/conversion/api/ConversionApi/Convert?outputType=HTML"
-
-    # Set the path to the file you want to send
-    file_path = os.path.abspath('21S2AccrSurvey_EEXXXX-Results (ready).xlsx')
-
-    # Create a dictionary with the file key and the file object
-    files = {"file": open(file_path, "rb")}
-
-    # Send the file using requests.post()
-    response = requests.post(url, files=files)
+    print("[INFO] Extracting charts...")
     
-    download_file_link = f'https://api.products.aspose.app/cells/conversion/api/Download/{response.json()["FolderName"]}?file=21S2AccrSurvey_EEXXXX-Results%20(ready).html'
+    url = 'https://document.online-convert.com/convert/xlsx-to-html'
+    chrome_options = webdriver.ChromeOptions()
+    prefs = {'download.default_directory' : os.getcwd()}
+    chrome_options.add_experimental_option('prefs', prefs)
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    chrome_options.add_argument('--headless') # set headless so that it runs in the background
     
-    file = requests.get(download_file_link, allow_redirects=True)
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
     
-    with open('21S2AccrSurvey_EEXXXX-Results (ready).html', 'wb') as infile:
-        infile.write(file.content)
+    upload_button = WebDriverWait(driver, 8).until(
+        EC.presence_of_element_located((By.XPATH, "/html/body/div[4]/div[3]/div[1]/div[1]/div/div/div[2]/button[1]"))
+    )
+    upload_button.click()
     
-    # with open('21S2AccrSurvey_EEXXXX-Results (ready).html', 'r') as infile:
-    #     formatted_text = BeautifulSoup(infile, 'html.parser').prettify()
+    time.sleep(1)
+    pyautogui.write(os.path.abspath('21S2AccrSurvey_EEXXXX-Results (ready).xlsx'))
+    pyautogui.press('enter')
     
-    # with open('21S2AccrSurvey_EEXXXX-Results (ready).html', 'w') as outfile:
-    #     outfile.write(formatted_text)
+    start_button = WebDriverWait(driver, 8).until(
+        EC.presence_of_element_located((By.XPATH, "/html/body/div[4]/div[3]/div[1]/div[2]/button"))
+    )
+    start_button.click()
+    
+    time.sleep(15)
+    download_image1 = WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[5]/div/a'))
+    )
+    download_image1.click()
+    time.sleep(1)
+    print('[INFO] Chart 1 Retrieved.')
+    
+    download_image2 = WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[7]/div/a'))
+    )
+    download_image2.click()
+    time.sleep(1)
+    print('[INFO] Chart 2 Retrieved.')
+    
+    download_image3 = WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[9]/div/a'))
+    )
+    download_image3.click()
+    time.sleep(1)
+    print('[INFO] Chart 3 Retrieved.')
     
     print('[INFO] Done!')
 
-def extract_chart_to_docx():
-    print("[INFO] Extracting charts...")
-    filename = "21S2AccrSurvey_EEXXXX-Results (ready).html"
-    
-    with open(filename, 'r') as infile:
-        file_content = infile.read()
-    
-    soup = BeautifulSoup(file_content, 'html.parser')
-    
-    images = soup.find_all('img')
-
-    image_names = ['image_0.png', 'image_1.png', 'image_2.png',]
-    
-    for index, image in enumerate(images):
-        base64_string = image['src'][22:]
-        
-        # Remove the header from the base64 string
-        image_data = base64.b64decode(base64_string)
-        
-        # Open the image data as a PIL Image object
-        image = Image.open(io.BytesIO(image_data))
-        
-        # Save the image as a PNG file
-        image.save(f'{image_names[index]}', 'PNG')
+def export_to_docx(): 
+    image_names = glob.glob('*.png')
     
     doc = docx.Document()
     
@@ -274,12 +272,12 @@ def extract_chart_to_docx():
     
     print("[INFO] 🟢 Output saved to './output.docx'.")
     
-    clean_folder(image_names, filename)
+    clean_folder(image_names)
 
-def clean_folder(image_names, filename):
+def clean_folder(image_names):
     for image_name in image_names:
         os.remove(image_name)
-    os.remove(filename)
+    # os.remove(filename)
     
 def main(skip):
     if not skip:
@@ -287,31 +285,25 @@ def main(skip):
     
     df = load_excel()
     write_to_excel(df)
-    convert_excel_to_html()
-    extract_chart_to_docx()
+    extract_charts_from_excel()
+    export_to_docx()
 
 def test():
-    retrieve_excel()
+    # retrieve_excel()
     # df = load_excel()
     # write_to_excel(df)
-    # extract_chart_to_docx()
-    # convert_excel_to_html()
+    extract_charts_from_excel()
+    export_to_docx()
 
 if __name__ == "__main__": 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--skip', action='store_true', help='Skip retrieval of responses.')
-    args = parser.parse_args()
-    skip = False
-    
-    if args.skip:
-        skip = True
-        main(skip)
-    
     if len(sys.argv) > 1:
         if sys.argv[1] == 'dev':
             print('Test Dev Block')
             test()
+        elif sys.argv[1] == 'skip':
+            main(skip=True)
     else:
-        main(skip)
+        print('Excel Populate V3.1.1')
+        main(skip=False)
 
     

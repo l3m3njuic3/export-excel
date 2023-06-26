@@ -4,4 +4,4 @@ Run in the console(without the ""):
 3. "python3 main.py"
 
 if you want to skip the data retrieval step, you can use:
-"python3 main.py -s"
+"python3 main.py skip"
