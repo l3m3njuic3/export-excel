@@ -7,13 +7,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 import traceback
-from PIL import Image
 import docx
 from docx.shared import Inches
 import sys
-import requests
 import pyautogui
 import glob
+
+VERSION = 'V3.1.1'
             
 def retrieve_excel():
     print('[INFO] IT IS NORMAL FOR RETRIEVAL TO FAIL, PLEASE BE PATIENT.')
@@ -91,20 +91,20 @@ def load_excel():
     filename = 'FYP Student Feedback Survey Form - Live Response .xlsx'
 
     questions = ['Cohort',
-                'Apply suitable load management techniques to achieve a reliable and sustainable power delivery system.', 
-                'Able to construct a fair and effective electricity tariff structure.', 
-                'Analyse the various causes of poor power quality in distribution systems due to switching events.',
-                'Able to apply appropriate mitigation techniques to improve power quality in distribution systems (voltage sags/swells).',
-                'Able to apply mitigation techniques to reduce the harmonic distortions in distribution networks.',
-                'Able to predict the position of the sun for the purpose of designing renewable solar energy systems.',
-                'Able to estimate the amount of solar insolation and understand how the solar panel can be best aligned for maximum energy collection.',
-                'Able to compute the current-voltage characteristics of solar cells, modules and arrays and apply mitigation techniques to shading problems.',
-                'Able to predict the power and energy of renewable wind resource at various wind speeds, temperatures and altitudes.',
-                'Able to understand the basic design of wind turbines and to predict the generated wind power injected into the grid.',
-                'Appreciate the need for lifelong learning and self-education in the design and operation of distribution systems with renewable energy generations.',
-                'Comments on the strengths of this course (if any):',
-                'Comments on the weaknesses of this course (if any):',
-                'Other comments on this course (if any):']
+                 'Apply suitable load management techniques to achieve a reliable and sustainable power delivery system.', 
+                 'Able to construct a fair and effective electricity tariff structure.', 
+                 'Analyse the various causes of poor power quality in distribution systems due to switching events.',
+                 'Able to apply appropriate mitigation techniques to improve power quality in distribution systems (voltage sags/swells).',
+                 'Able to apply mitigation techniques to reduce the harmonic distortions in distribution networks.',
+                 'Able to predict the position of the sun for the purpose of designing renewable solar energy systems.',
+                 'Able to estimate the amount of solar insolation and understand how the solar panel can be best aligned for maximum energy collection.',
+                 'Able to compute the current-voltage characteristics of solar cells, modules and arrays and apply mitigation techniques to shading problems.',
+                 'Able to predict the power and energy of renewable wind resource at various wind speeds, temperatures and altitudes.',
+                 'Able to understand the basic design of wind turbines and to predict the generated wind power injected into the grid.',
+                 'Appreciate the need for lifelong learning and self-education in the design and operation of distribution systems with renewable energy generations.',
+                 'Comments on the strengths of this course (if any):',
+                 'Comments on the weaknesses of this course (if any):',
+                 'Other comments on this course (if any):']
 
     # read the excel file
     # filter out only the needed columns
@@ -207,9 +207,7 @@ def write_to_excel(df):
         print("[ERROR] 🔴 Failed to save changes to file.")
         print("[ERROR] 🔴 Please make sure the file is closed before trying again.")
 
-def extract_charts_from_excel():
-    print('[INFO] Preparing Microsoft Word Document for exporting...')
-        
+def extract_charts_from_excel():        
     print("[INFO] Extracting charts...")
     
     url = 'https://document.online-convert.com/convert/xlsx-to-html'
@@ -217,7 +215,7 @@ def extract_charts_from_excel():
     prefs = {'download.default_directory' : os.getcwd()}
     chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    chrome_options.add_argument('--headless') # set headless so that it runs in the background
+    #  chrome_options.add_argument('--headless') # set headless so that it runs in the background
     
     driver = webdriver.Chrome(options=chrome_options)
     driver.get(url)
@@ -228,31 +226,37 @@ def extract_charts_from_excel():
     upload_button.click()
     
     time.sleep(1)
-    pyautogui.write(os.path.abspath('21S2AccrSurvey_EEXXXX-Results (ready).xlsx'))
+    pyautogui.hotkey('command', 'shift', 'g')
+    time.sleep(2)
+    pyautogui.typewrite(os.path.abspath('21S2AccrSurvey_EEXXXX-Results (ready).xlsx'), interval=0.1)
+    time.sleep(1)
+    pyautogui.press('enter')
+    time.sleep(1)
     pyautogui.press('enter')
     
+    time.sleep(30)
     start_button = WebDriverWait(driver, 8).until(
         EC.presence_of_element_located((By.XPATH, "/html/body/div[4]/div[3]/div[1]/div[2]/button"))
     )
     start_button.click()
-    
-    time.sleep(15)
+
+    time.sleep(10)
     download_image1 = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[5]/div/a'))
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[5]/div/a'))
     )
     download_image1.click()
     time.sleep(1)
     print('[INFO] Chart 1 Retrieved.')
     
     download_image2 = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[7]/div/a'))
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[7]/div/a'))
     )
     download_image2.click()
     time.sleep(1)
     print('[INFO] Chart 2 Retrieved.')
     
     download_image3 = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[9]/div/a'))
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="page_function_container"]/div/div/div/div[1]/div[10]/div[2]/div[2]/div/div[9]/div/a'))
     )
     download_image3.click()
     time.sleep(1)
@@ -261,6 +265,8 @@ def extract_charts_from_excel():
     print('[INFO] Done!')
 
 def export_to_docx(): 
+    print('[INFO] Preparing Microsoft Word Document for exporting...')
+    
     image_names = glob.glob('*.png')
     
     doc = docx.Document()
@@ -303,7 +309,7 @@ if __name__ == "__main__":
         elif sys.argv[1] == 'skip':
             main(skip=True)
     else:
-        print('Excel Populate V3.1.1')
+        print(f'Excel Populate {VERSION}')
         main(skip=False)
 
     

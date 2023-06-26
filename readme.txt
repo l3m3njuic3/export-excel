@@ -10,3 +10,7 @@ if you want to skip the data retrieval step, you can use:
 
 run dev build:
 "python3 main.py dev"
+
+todo list:
+- make windows compatible
+- make cleaner
