@@ -7,3 +7,6 @@ Run in the console(without the ""):
 
 if you want to skip the data retrieval step, you can use:
 "python3 main.py skip"
+
+run dev build:
+"python3 main.py dev"
